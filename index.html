@@ -3,15 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Video Generator – Free Text to Video</title>
+  <title>Generate Video AI – Fast Generator</title>
 
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-        sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
     body {
@@ -44,14 +43,7 @@
       width: 44px;
       height: 44px;
       border-radius: 999px;
-      background: conic-gradient(
-        from 180deg,
-        #38bdf8,
-        #a855f7,
-        #f97316,
-        #22c55e,
-        #38bdf8
-      );
+      background: conic-gradient(from 180deg, #38bdf8, #a855f7, #f97316, #22c55e, #38bdf8);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -147,13 +139,6 @@
       background: #f9fafb;
     }
 
-    textarea:focus,
-    .language-select:focus,
-    .length-select:focus {
-      border-color: #60a5fa;
-      box-shadow: 0 0 0 1px #bfdbfe;
-    }
-
     .length-row {
       display: flex;
       align-items: center;
@@ -218,10 +203,6 @@
       cursor: pointer;
     }
 
-    .btn-icon {
-      font-size: 16px;
-    }
-
     .status-box {
       margin-top: 10px;
       border-radius: 16px;
@@ -250,21 +231,6 @@
       color: #9ca3af;
       text-align: center;
     }
-
-    .footer span {
-      font-weight: 600;
-      color: #6b7280;
-    }
-
-    @media (max-width: 400px) {
-      .title {
-        font-size: 17px;
-      }
-
-      .header {
-        align-items: flex-start;
-      }
-    }
   </style>
 </head>
 <body>
@@ -274,40 +240,29 @@
         <span>AI</span>
       </div>
       <div class="header-text">
-        <div class="title">AI Video Generator – Free</div>
-        <div class="subtitle">
-          Text ➜ Video · Up to 15 minutes · Free
-        </div>
+        <div class="title">Generate Video AI – Fast Generator</div>
+        <div class="subtitle">Text ➜ Video · Up to 10 minutes · Free</div>
       </div>
     </div>
 
     <div class="badge-row">
-      <div class="badge">
-        <span>⚡</span> Text to Video AI
-      </div>
-      <div class="badge">
-        <span>🎬</span> Max 15 minutes
-      </div>
-      <div class="badge">
-        <span>🌍</span> EN · AR · SO · SV
-      </div>
+      <div class="badge"><span>⚡</span> Video AI Generator</div>
+      <div class="badge"><span>🎬</span> Max 10 minutes</div>
+      <div class="badge"><span>🌍</span> AR · EN · SO · SV</div>
     </div>
 
     <div class="language-row">
-      <div class="language-label">Language / لغة / Af-Soomaali / Svenska</div>
+      <div class="language-label">Arabic | English | Somali | Swedish</div>
       <select id="language" class="language-select">
-        <option value="en">English</option>
         <option value="ar">Arabic / العربية</option>
+        <option value="en">English</option>
         <option value="so">Somali / Af-Soomaali</option>
         <option value="sv">Swedish / Svenska</option>
       </select>
     </div>
 
-    <div class="input-label">1. Enter your video script / النص / qoraalka</div>
-    <textarea
-      id="script"
-      placeholder="Write your scene, story, or idea for the AI video here..."
-    ></textarea>
+    <div class="input-label">1. Enter your video script</div>
+    <textarea id="script" placeholder="Write your idea or scene here..."></textarea>
 
     <div class="length-row">
       <div class="input-label" style="margin-top: 0;">2. Video length</div>
@@ -316,39 +271,24 @@
         <option value="60">1 minute</option>
         <option value="180">3 minutes</option>
         <option value="300">5 minutes</option>
-        <option value="600">10 minutes</option>
-        <option value="900">15 minutes (max)</option>
+        <option value="600">10 minutes (max)</option>
       </select>
     </div>
 
-    <p class="hint">
-      Max duration: <strong>15 minutes</strong>. Perfect for short clips,
-      educational videos, social media, and more.
-    </p>
+    <p class="hint">Max duration: <strong>10 minutes</strong>.</p>
 
     <div class="button-row">
       <button class="btn-primary" onclick="handleGenerate()">
-        <span class="btn-icon">🎥</span>
-        <span>Generate Video with AI</span>
+        🎥 Generate Video AI
       </button>
-
       <button class="btn-secondary" onclick="handleOpenGallery()">
-        <span class="btn-icon">▶️</span>
-        <span>Play My Generated Videos</span>
+        ▶️ My Videos
       </button>
     </div>
 
     <div id="status" class="status-box">
       <div class="dot"></div>
-      <div>
-        <strong>Demo mode</strong> – This page is ready for your app.<br />
-        Connect it later to your favorite AI video API (Pictory, Runway, etc.).
-      </div>
-    </div>
-
-    <div class="footer">
-      <span>AI Video Generator</span> · UI ready for AppCreator24 · Frontend
-      only (no backend yet)
+      <div><strong>Demo mode</strong> – Connect later to your real AI backend.</div>
     </div>
   </div>
 
@@ -360,30 +300,31 @@
       const statusBox = document.getElementById("status");
 
       if (!scriptText) {
-        statusBox.innerHTML =
-          '<div class="dot"></div><div>Please write your text / script before generating the video.</div>';
+        statusBox.innerHTML = '<div class="dot"></div><div>Please write your script first.</div>';
         return;
       }
 
-      let langLabel = "English";
-      if (language === "ar") langLabel = "Arabic / العربية";
-      if (language === "so") langLabel = "Somali / Af-Soomaali";
-      if (language === "sv") langLabel = "Swedish / Svenska";
+      const langMap = {
+        ar: "Arabic",
+        en: "English",
+        so: "Somali",
+        sv: "Swedish",
+      };
 
       statusBox.innerHTML =
-        '<div class="dot"></div><div><strong>Preparing request…</strong><br />This is a <strong>demo UI</strong>. Here you can connect your real AI backend (API) to generate the video automatically.<br /><br />Text length: ' +
+        '<div class="dot"></div><div><strong>Preparing…</strong><br />Demo UI only — connect your API later.<br /><br />Text length: ' +
         scriptText.length +
         " characters · Language: " +
-        langLabel +
-        " · Target length: up to " +
+        langMap[language] +
+        " · Target: " +
         Math.round(length / 60) +
-        " minutes.</div>";
+        " min.</div>";
     }
 
     function handleOpenGallery() {
       const statusBox = document.getElementById("status");
       statusBox.innerHTML =
-        '<div class="dot"></div><div><strong>My Videos Gallery</strong><br />Here you can show a list of your generated videos inside the app (thumbnails + play / download buttons).<br /><br />Connect this section later to your own database or video hosting.</div>';
+        '<div class="dot"></div><div><strong>My Videos</strong><br />Add thumbnails and video playback here once connected to your backend.</div>';
     }
   </script>
 </body>
