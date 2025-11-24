@@ -1,331 +1,121 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Generate Video AI – Fast Generator</title>
+<script>
+  // رابط السيرفر الخاص بك على Render
+  const API_URL = "https://video-ai-backend-figu.onrender.com";
 
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  // قائمة لحفظ الفيديوهات التي تم إنشاؤها
+  const videos = [];
+
+  async function handleGenerate() {
+    const scriptText = document.getElementById("script").value.trim();
+    const language = document.getElementById("language").value;
+    const length = document.getElementById("length").value;
+    const statusBox = document.getElementById("status");
+
+    if (!scriptText) {
+      statusBox.innerHTML =
+        '<div class="dot"></div><div>Please write your script first.</div>';
+      return;
     }
 
-    body {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      background: linear-gradient(135deg, #0f172a, #1e293b, #38bdf8);
-      color: #0f172a;
-    }
+    const langMap = {
+      ar: "Arabic",
+      en: "English",
+      so: "Somali",
+      sv: "Swedish",
+    };
 
-    .app {
-      width: 100%;
-      max-width: 480px;
-      background: rgba(255, 255, 255, 0.98);
-      border-radius: 24px;
-      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.35);
-      padding: 20px 18px 18px;
-    }
+    const lengthText =
+      length === "30"
+        ? "30 sec"
+        : length === "60"
+        ? "1 min"
+        : Math.round(length / 60) + " min";
 
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
+    statusBox.innerHTML =
+      '<div class="dot"></div><div><strong>Generating…</strong><br />Please wait while we create your video…</div>';
 
-    .logo-circle {
-      width: 44px;
-      height: 44px;
-      border-radius: 999px;
-      background: conic-gradient(from 180deg, #38bdf8, #a855f7, #f97316, #22c55e, #38bdf8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 10px 25px rgba(56, 189, 248, 0.5);
-    }
+    try {
+      const res = await fetch(API_URL + "/api/generate-video", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          script: scriptText,
+          language,
+          length_seconds: Number(length),
+          voice: true,
+        }),
+      });
 
-    .logo-circle span {
-      font-weight: 800;
-      font-size: 20px;
-      color: #0f172a;
-    }
+      const data = await res.json();
 
-    .header-text {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .title {
-      font-size: 18px;
-      font-weight: 700;
-      color: #0f172a;
-    }
-
-    .subtitle {
-      font-size: 12px;
-      color: #6b7280;
-    }
-
-    .badge-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-    }
-
-    .badge {
-      font-size: 11px;
-      padding: 4px 10px;
-      border-radius: 999px;
-      background: #eff6ff;
-      color: #1d4ed8;
-      border: 1px solid #bfdbfe;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .badge span {
-      font-size: 13px;
-    }
-
-    .language-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    .language-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: #4b5563;
-    }
-
-    .language-select {
-      width: 58%;
-      padding: 7px 9px;
-      border-radius: 999px;
-      border: 1px solid #e5e7eb;
-      font-size: 13px;
-      background: #f9fafb;
-      outline: none;
-    }
-
-    .input-label {
-      font-size: 13px;
-      font-weight: 600;
-      color: #4b5563;
-      margin-bottom: 6px;
-      margin-top: 8px;
-    }
-
-    textarea {
-      width: 100%;
-      min-height: 120px;
-      border-radius: 16px;
-      border: 1px solid #e5e7eb;
-      padding: 10px 11px;
-      font-size: 13px;
-      resize: vertical;
-      outline: none;
-      background: #f9fafb;
-    }
-
-    .length-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 8px;
-      margin-bottom: 6px;
-    }
-
-    .length-select {
-      flex: 1;
-      padding: 7px 9px;
-      border-radius: 999px;
-      border: 1px solid #e5e7eb;
-      font-size: 13px;
-      background: #f9fafb;
-      outline: none;
-    }
-
-    .hint {
-      font-size: 11px;
-      color: #6b7280;
-      margin-bottom: 10px;
-    }
-
-    .button-row {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 10px;
-    }
-
-    .btn-primary {
-      width: 100%;
-      border-radius: 999px;
-      padding: 11px 10px;
-      border: none;
-      background: linear-gradient(135deg, #2563eb, #38bdf8);
-      color: #eff6ff;
-      font-size: 14px;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      cursor: pointer;
-      box-shadow: 0 12px 25px rgba(37, 99, 235, 0.45);
-    }
-
-    .btn-secondary {
-      width: 100%;
-      border-radius: 999px;
-      padding: 10px 10px;
-      border: 1px dashed #cbd5f5;
-      background: #f9fafb;
-      color: #475569;
-      font-size: 13px;
-      font-weight: 500;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      cursor: pointer;
-    }
-
-    .status-box {
-      margin-top: 10px;
-      border-radius: 16px;
-      padding: 9px 10px;
-      font-size: 12px;
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      color: #1d4ed8;
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-    }
-
-    .dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 999px;
-      margin-top: 3px;
-      background: radial-gradient(circle, #22c55e 0, #16a34a 45%, #15803d 100%);
-      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.2);
-    }
-
-    .footer {
-      margin-top: 12px;
-      font-size: 10px;
-      color: #9ca3af;
-      text-align: center;
-    }
-  </style>
-</head>
-<body>
-  <div class="app">
-    <div class="header">
-      <div class="logo-circle">
-        <span>AI</span>
-      </div>
-      <div class="header-text">
-        <div class="title">Generate Video AI – Fast Generator</div>
-        <div class="subtitle">Text ➜ Video · Up to 10 minutes · Free</div>
-      </div>
-    </div>
-
-    <div class="badge-row">
-      <div class="badge"><span>⚡</span> Video AI Generator</div>
-      <div class="badge"><span>🎬</span> Max 10 minutes</div>
-      <div class="badge"><span>🌍</span> AR · EN · SO · SV</div>
-    </div>
-
-    <div class="language-row">
-      <div class="language-label">Arabic | English | Somali | Swedish</div>
-      <select id="language" class="language-select">
-        <option value="ar">Arabic / العربية</option>
-        <option value="en">English</option>
-        <option value="so">Somali / Af-Soomaali</option>
-        <option value="sv">Swedish / Svenska</option>
-      </select>
-    </div>
-
-    <div class="input-label">1. Enter your video script</div>
-    <textarea id="script" placeholder="Write your idea or scene here..."></textarea>
-
-    <div class="length-row">
-      <div class="input-label" style="margin-top: 0;">2. Video length</div>
-      <select id="length" class="length-select">
-        <option value="30">30 seconds</option>
-        <option value="60">1 minute</option>
-        <option value="180">3 minutes</option>
-        <option value="300">5 minutes</option>
-        <option value="600">10 minutes (max)</option>
-      </select>
-    </div>
-
-    <p class="hint">Max duration: <strong>10 minutes</strong>.</p>
-
-    <div class="button-row">
-      <button class="btn-primary" onclick="handleGenerate()">
-        🎥 Generate Video AI
-      </button>
-      <button class="btn-secondary" onclick="handleOpenGallery()">
-        ▶️ My Videos
-      </button>
-    </div>
-
-    <div id="status" class="status-box">
-      <div class="dot"></div>
-      <div><strong>Demo mode</strong> – Connect later to your real AI backend.</div>
-    </div>
-  </div>
-
-  <script>
-    function handleGenerate() {
-      const scriptText = document.getElementById("script").value.trim();
-      const language = document.getElementById("language").value;
-      const length = document.getElementById("length").value;
-      const statusBox = document.getElementById("status");
-
-      if (!scriptText) {
-        statusBox.innerHTML = '<div class="dot"></div><div>Please write your script first.</div>';
+      if (!res.ok || data.error) {
+        statusBox.innerHTML =
+          '<div class="dot"></div><div>❌ Error: ' +
+          (data.error || "Server error") +
+          "</div>";
         return;
       }
 
-      const langMap = {
-        ar: "Arabic",
-        en: "English",
-        so: "Somali",
-        sv: "Swedish",
-      };
+      const videoUrl = data.videoUrl;
+
+      // نخزن الفيديو الجديد
+      videos.unshift({
+        url: videoUrl,
+        language: langMap[language],
+        lengthText,
+      });
 
       statusBox.innerHTML =
-        '<div class="dot"></div><div><strong>Preparing…</strong><br />Demo UI only — connect your API later.<br /><br />Text length: ' +
-        scriptText.length +
-        " characters · Language: " +
+        '<div class="dot"></div><div>' +
+        "<strong>✅ Video created successfully!</strong><br /><br />" +
+        "Language: " +
         langMap[language] +
-        " · Target: " +
-        Math.round(length / 60) +
-        " min.</div>";
+        " · Length: " +
+        lengthText +
+        "<br /><br />" +
+        '<video controls style="width:100%;border-radius:12px;"><source src="' +
+        videoUrl +
+        '" type="video/mp4"></video><br /><br />' +
+        '<a href="' +
+        videoUrl +
+        '" download>⬇ Download video</a><br /><br />' +
+        "Open <strong>My Videos</strong> to see all generated videos." +
+        "</div>";
+    } catch (err) {
+      statusBox.innerHTML =
+        '<div class="dot"></div><div>❌ Network error: ' +
+        err.message +
+        "</div>";
+    }
+  }
+
+  function handleOpenGallery() {
+    const statusBox = document.getElementById("status");
+    if (!videos.length) {
+      statusBox.innerHTML =
+        '<div class="dot"></div><div><strong>My Videos</strong><br />No videos yet. Generate one first.</div>';
+      return;
     }
 
-    function handleOpenGallery() {
-      const statusBox = document.getElementById("status");
-      statusBox.innerHTML =
-        '<div class="dot"></div><div><strong>My Videos</strong><br />Add thumbnails and video playback here once connected to your backend.</div>';
-    }
-  </script>
-</body>
-</html>
+    let html = '<div class="dot"></div><div><strong>My Videos</strong><br /><br />';
+    videos.forEach((v, i) => {
+      html +=
+        "🔹 Video " +
+        (i + 1) +
+        " – " +
+        v.language +
+        " · " +
+        v.lengthText +
+        "<br />" +
+        '<video controls style="width:100%;border-radius:12px;margin:6px 0;"><source src="' +
+        v.url +
+        '" type="video/mp4"></video>' +
+        '<a href="' +
+        v.url +
+        '" download>⬇ Download</a><br /><br />';
+    });
+    html += "</div>";
+
+    statusBox.innerHTML = html;
+  }
+</script>
