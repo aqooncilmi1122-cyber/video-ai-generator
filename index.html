@@ -1,121 +1,219 @@
-<script>
-  // رابط السيرفر الخاص بك على Render
-  const API_URL = "https://video-ai-backend-figu.onrender.com";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Video Generator – Fast & Free</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  // قائمة لحفظ الفيديوهات التي تم إنشاؤها
-  const videos = [];
-
-  async function handleGenerate() {
-    const scriptText = document.getElementById("script").value.trim();
-    const language = document.getElementById("language").value;
-    const length = document.getElementById("length").value;
-    const statusBox = document.getElementById("status");
-
-    if (!scriptText) {
-      statusBox.innerHTML =
-        '<div class="dot"></div><div>Please write your script first.</div>';
-      return;
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
     }
 
-    const langMap = {
-      ar: "Arabic",
-      en: "English",
-      so: "Somali",
-      sv: "Swedish",
-    };
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #0f172a, #1e293b, #0369a1);
+      padding: 16px;
+      color: #0f172a;
+    }
 
-    const lengthText =
-      length === "30"
-        ? "30 sec"
-        : length === "60"
-        ? "1 min"
-        : Math.round(length / 60) + " min";
+    .app {
+      width: 100%;
+      max-width: 480px;
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.35);
+      padding: 20px 18px 22px;
+    }
 
-    statusBox.innerHTML =
-      '<div class="dot"></div><div><strong>Generating…</strong><br />Please wait while we create your video…</div>';
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
 
-    try {
-      const res = await fetch(API_URL + "/api/generate-video", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          script: scriptText,
-          language,
-          length_seconds: Number(length),
-          voice: true,
-        }),
-      });
+    .logo-circle {
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 30% 0%, #22c55e, #0ea5e9);
+      color: #ecfeff;
+      font-weight: 700;
+      font-size: 18px;
+      box-shadow: 0 8px 20px rgba(14, 165, 233, 0.4);
+    }
 
-      const data = await res.json();
+    .app-title {
+      font-weight: 700;
+      font-size: 16px;
+      color: #0f172a;
+      line-height: 1.2;
+    }
 
-      if (!res.ok || data.error) {
-        statusBox.innerHTML =
-          '<div class="dot"></div><div>❌ Error: ' +
-          (data.error || "Server error") +
-          "</div>";
-        return;
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #e0f2fe;
+      color: #0369a1;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: #22c55e;
+      box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.25);
+    }
+
+    .card {
+      background: #f8fafc;
+      border-radius: 18px;
+      padding: 12px 12px;
+      margin-bottom: 10px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .card-text {
+      font-size: 11px;
+      color: #64748b;
+      line-height: 1.4;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #0f172a;
+      margin: 8px 2px 4px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 110px;
+      resize: vertical;
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+      padding: 8px 10px;
+      font-size: 13px;
+      line-height: 1.4;
+      outline: none;
+      transition: border 0.15s, box-shadow 0.15s;
+    }
+
+    textarea:focus {
+      border-color: #0284c7;
+      box-shadow: 0 0 0 1px rgba(2, 132, 199, 0.35);
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .select-group {
+      flex: 1;
+    }
+
+    select,
+    input[type="number"] {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      padding: 7px 9px;
+      font-size: 12px;
+      background: #ffffff;
+      outline: none;
+      transition: border 0.15s, box-shadow 0.15s;
+    }
+
+    select:focus,
+    input[type="number"]:focus {
+      border-color: #0284c7;
+      box-shadow: 0 0 0 1px rgba(2, 132, 199, 0.35);
+    }
+
+    .hint {
+      font-size: 10px;
+      color: #94a3b8;
+      margin-top: 2px;
+    }
+
+    .btn {
+      width: 100%;
+      border: none;
+      border-radius: 999px;
+      padding: 11px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #0ea5e9, #2563eb);
+      color: #eff6ff;
+      box-shadow: 0 14px 30px rgba(37, 99, 235, 0.55);
+      transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 8px 18px rgba(37, 99, 235, 0.45);
+      opacity: 0.95;
+    }
+
+    .btn[disabled] {
+      opacity: 0.7;
+      cursor: default;
+      box-shadow: none;
+    }
+
+    .btn-spinner {
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      border: 2px solid rgba(239, 246, 255, 0.5);
+      border-top-color: #e0f2fe;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
       }
-
-      const videoUrl = data.videoUrl;
-
-      // نخزن الفيديو الجديد
-      videos.unshift({
-        url: videoUrl,
-        language: langMap[language],
-        lengthText,
-      });
-
-      statusBox.innerHTML =
-        '<div class="dot"></div><div>' +
-        "<strong>✅ Video created successfully!</strong><br /><br />" +
-        "Language: " +
-        langMap[language] +
-        " · Length: " +
-        lengthText +
-        "<br /><br />" +
-        '<video controls style="width:100%;border-radius:12px;"><source src="' +
-        videoUrl +
-        '" type="video/mp4"></video><br /><br />' +
-        '<a href="' +
-        videoUrl +
-        '" download>⬇ Download video</a><br /><br />' +
-        "Open <strong>My Videos</strong> to see all generated videos." +
-        "</div>";
-    } catch (err) {
-      statusBox.innerHTML =
-        '<div class="dot"></div><div>❌ Network error: ' +
-        err.message +
-        "</div>";
-    }
-  }
-
-  function handleOpenGallery() {
-    const statusBox = document.getElementById("status");
-    if (!videos.length) {
-      statusBox.innerHTML =
-        '<div class="dot"></div><div><strong>My Videos</strong><br />No videos yet. Generate one first.</div>';
-      return;
     }
 
-    let html = '<div class="dot"></div><div><strong>My Videos</strong><br /><br />';
-    videos.forEach((v, i) => {
-      html +=
-        "🔹 Video " +
-        (i + 1) +
-        " – " +
-        v.language +
-        " · " +
-        v.lengthText +
-        "<br />" +
-        '<video controls style="width:100%;border-radius:12px;margin:6px 0;"><source src="' +
-        v.url +
-        '" type="video/mp4"></video>' +
-        '<a href="' +
-        v.url +
-        '" download>⬇ Download</a><br /><br />';
-    });
-    html += "</div>";
+    .status {
+      margin-top: 10px;
+      font-size: 11px;
+      min-height: 14px;
+    }
 
-    statusBox.innerHTML = html;
-  }
-</script>
+    .status.ok {
+      color: #16a34a;
+    }
