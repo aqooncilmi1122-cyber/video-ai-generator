@@ -1,49 +1,206 @@
-<script>
-  const API_URL = "https://video-ai-backend-server.onrender.com/api/generate";
-
-  async function generateVideo() {
-    const prompt = document.getElementById("promptInput").value;
-    const duration = document.getElementById("durationInput").value;
-    const aspectRatio = document.getElementById("aspectSelect").value;
-    const style = document.getElementById("styleSelect").value;
-
-    if (!prompt) {
-      alert("Please enter a script first.");
-      return;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Video Generator</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1f3bff 0, #050816 45%, #000000 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
+    .app {
+      width: 100%;
+      max-width: 480px;
+      padding: 20px 18px 28px;
+      border-radius: 18px;
+      background: rgba(10, 10, 30, 0.92);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+    h1 {
+      margin: 0 0 4px;
+      font-size: 1.4rem;
+      text-align: center;
+    }
+    .subtitle {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    label {
+      font-size: 0.8rem;
+      margin-bottom: 4px;
+      display: block;
+      opacity: 0.85;
+    }
+    textarea,
+    input,
+    select {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(15, 15, 40, 0.95);
+      color: #fff;
+      padding: 8px 10px;
+      font-size: 0.9rem;
+      outline: none;
+      box-sizing: border-box;
+    }
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+    .row {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .field {
+      flex: 1;
+    }
+    button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 11px 14px;
+      border-radius: 999px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ff4fd8, #ff8a3c);
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
+      box-shadow: none;
+    }
+    #result {
+      margin-top: 18px;
+      padding-top: 12px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: none;
+    }
+    video {
+      width: 100%;
+      border-radius: 12px;
+      margin-top: 8px;
+    }
+    a#downloadLink {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 0.85rem;
+      color: #4fd1ff;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <h1>AI Video Generator</h1>
+    <div class="subtitle">Demo — Text to Video (Runway backend)</div>
 
-    document.getElementById("generateBtn").disabled = true;
-    document.getElementById("generateBtn").innerText = "Generating...";
+    <label for="promptInput">Script / Prompt</label>
+    <textarea id="promptInput" placeholder="Write your video idea, scene or story here..."></textarea>
 
-    try {
-      const res = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          script: prompt,
-          duration,
-          aspectRatio,
-          style
-        })
-      });
+    <div class="row">
+      <div class="field">
+        <label for="durationInput">Duration (sec)</label>
+        <input id="durationInput" type="number" min="5" max="60" value="10" />
+      </div>
+      <div class="field">
+        <label for="aspectSelect">Aspect ratio</label>
+        <select id="aspectSelect">
+          <option value="16:9">16:9 (Landscape)</option>
+          <option value="9:16">9:16 (Vertical)</option>
+          <option value="1:1">1:1 (Square)</option>
+        </select>
+      </div>
+    </div>
 
-      const data = await res.json();
+    <div class="row">
+      <div class="field">
+        <label for="styleSelect">Style</label>
+        <select id="styleSelect">
+          <option value="cinematic">Cinematic</option>
+          <option value="realistic">Realistic</option>
+          <option value="cartoon">Cartoon</option>
+          <option value="anime">Anime</option>
+        </select>
+      </div>
+    </div>
 
-      if (!data.success) {
-        alert("Error: " + data.message);
+    <button id="generateBtn" onclick="generateVideo()">Generate Video</button>
+
+    <div id="result">
+      <div style="font-size:0.9rem; margin-bottom:4px;">Your generated video</div>
+      <video id="previewVideo" controls></video>
+      <a id="downloadLink" href="#" download="ai-video.mp4">Download video</a>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = "https://video-ai-backend-server.onrender.com/api/generate";
+
+    async function generateVideo() {
+      const prompt = document.getElementById("promptInput").value;
+      const duration = document.getElementById("durationInput").value;
+      const aspectRatio = document.getElementById("aspectSelect").value;
+      const style = document.getElementById("styleSelect").value;
+
+      if (!prompt) {
+        alert("Please enter a script first.");
         return;
       }
 
-      const videoUrl = data.videoUrl;
-      document.getElementById("result").style.display = "block";
-      document.getElementById("previewVideo").src = videoUrl;
-      document.getElementById("downloadLink").href = videoUrl;
+      const btn = document.getElementById("generateBtn");
+      btn.disabled = true;
+      btn.innerText = "Generating...";
 
-    } catch (err) {
-      alert("Server error: " + err.message);
+      try {
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            script: prompt,
+            duration,
+            aspectRatio,
+            style
+          })
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+          alert("Error: " + (data.message || "Failed to generate video"));
+          return;
+        }
+
+        const videoUrl = data.videoUrl;
+        if (!videoUrl) {
+          alert("No video URL returned from server.");
+          return;
+        }
+
+        document.getElementById("result").style.display = "block";
+        document.getElementById("previewVideo").src = videoUrl;
+        document.getElementById("downloadLink").href = videoUrl;
+      } catch (err) {
+        alert("Server error: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Generate Video";
+      }
     }
-
-    document.getElementById("generateBtn").disabled = false;
-    document.getElementById("generateBtn").innerText = "Generate Video";
-  }
-</script>
+  </script>
+</body>
+</html>
