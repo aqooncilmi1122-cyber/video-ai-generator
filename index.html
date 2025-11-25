@@ -1,460 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AI Video Generator – Free & Fast</title>
+<script>
+  const API_URL = "https://video-ai-backend-server.onrender.com/api/generate";
 
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-        sans-serif;
+  async function generateVideo() {
+    const prompt = document.getElementById("promptInput").value;
+    const duration = document.getElementById("durationInput").value;
+    const aspectRatio = document.getElementById("aspectSelect").value;
+    const style = document.getElementById("styleSelect").value;
+
+    if (!prompt) {
+      alert("Please enter a script first.");
+      return;
     }
 
-    body {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 16px;
-      background: radial-gradient(circle at top, #e0f2fe, #020617);
-      color: #0f172a;
-    }
+    document.getElementById("generateBtn").disabled = true;
+    document.getElementById("generateBtn").innerText = "Generating...";
 
-    .app {
-      width: 100%;
-      max-width: 480px;
-      background: #0b1120;
-      color: #e5e7eb;
-      border-radius: 24px;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
-      overflow: hidden;
-      border: 1px solid rgba(148, 163, 184, 0.4);
-    }
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          script: prompt,
+          duration,
+          aspectRatio,
+          style
+        })
+      });
 
-    .header {
-      padding: 18px 20px;
-      background: radial-gradient(circle at top left, #38bdf8, #4f46e5);
-      color: #0b1120;
-    }
+      const data = await res.json();
 
-    .header-title {
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: 0.03em;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .header-pill {
-      font-size: 11px;
-      padding: 3px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(15, 23, 42, 0.3);
-      background: rgba(15, 23, 42, 0.08);
-    }
-
-    .header-sub {
-      margin-top: 6px;
-      font-size: 13px;
-      opacity: 0.9;
-    }
-
-    .badge-row {
-      margin-top: 10px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      font-size: 11px;
-    }
-
-    .badge {
-      padding: 3px 8px;
-      border-radius: 999px;
-      background: rgba(15, 23, 42, 0.06);
-      border: 1px solid rgba(15, 23, 42, 0.15);
-    }
-
-    .body {
-      padding: 18px 16px 18px;
-    }
-
-    .field-label {
-      font-size: 12px;
-      margin-bottom: 4px;
-      color: #9ca3af;
-    }
-
-    .field-label span {
-      color: #38bdf8;
-      font-weight: 600;
-    }
-
-    .textarea {
-      width: 100%;
-      min-height: 96px;
-      resize: vertical;
-      border-radius: 14px;
-      border: 1px solid #1f2937;
-      background: #020617;
-      color: #e5e7eb;
-      padding: 10px 11px;
-      font-size: 13px;
-      outline: none;
-    }
-
-    .textarea::placeholder {
-      color: #6b7280;
-    }
-
-    .textarea:focus {
-      border-color: #38bdf8;
-      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.5);
-    }
-
-    .row {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-      flex-wrap: wrap;
-    }
-
-    .row > div {
-      flex: 1;
-      min-width: 120px;
-    }
-
-    select {
-      width: 100%;
-      border-radius: 999px;
-      border: 1px solid #1f2937;
-      background: #020617;
-      color: #e5e7eb;
-      padding: 7px 11px;
-      font-size: 13px;
-      outline: none;
-    }
-
-    select:focus {
-      border-color: #38bdf8;
-      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.5);
-    }
-
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-top: 8px;
-    }
-
-    .chip {
-      font-size: 11px;
-      padding: 4px 9px;
-      border-radius: 999px;
-      background: #020617;
-      border: 1px solid #1f2937;
-      color: #9ca3af;
-    }
-
-    .chip span {
-      color: #38bdf8;
-      font-weight: 600;
-      margin-right: 2px;
-    }
-
-    .button-main {
-      width: 100%;
-      margin-top: 14px;
-      padding: 10px 14px;
-      border-radius: 999px;
-      border: none;
-      outline: none;
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-      color: #022c22;
-      font-weight: 700;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      cursor: pointer;
-    }
-
-    .button-main:disabled {
-      opacity: 0.6;
-      cursor: wait;
-    }
-
-    .hint-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-top: 8px;
-      font-size: 11px;
-      color: #6b7280;
-    }
-
-    .hint-row span {
-      color: #38bdf8;
-    }
-
-    .status-card {
-      margin-top: 14px;
-      border-radius: 16px;
-      border: 1px solid #1f2937;
-      background: radial-gradient(circle at top left, #020617, #020617);
-      padding: 10px 11px;
-      font-size: 12px;
-    }
-
-    .status-title {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 4px;
-      color: #e5e7eb;
-    }
-
-    .status-pill {
-      padding: 2px 8px;
-      border-radius: 999px;
-      font-size: 10px;
-      background: rgba(15, 23, 42, 0.8);
-      border: 1px solid #1f2937;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .status-text {
-      color: #9ca3af;
-      min-height: 32px;
-    }
-
-    .status-text strong {
-      color: #e5e7eb;
-    }
-
-    .footer {
-      margin-top: 8px;
-      font-size: 10px;
-      color: #6b7280;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 4px;
-    }
-
-    .dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 999px;
-      background: #22c55e;
-      box-shadow: 0 0 0 5px rgba(34, 197, 94, 0.25);
-      margin-right: 4px;
-    }
-
-    .endpoint {
-      font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco,
-        Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size: 9px;
-      color: #6b7280;
-      max-width: 100%;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    @media (max-width: 480px) {
-      .header {
-        padding: 16px 16px 14px;
-      }
-      .body {
-        padding: 14px 13px 14px;
-      }
-      .header-title {
-        font-size: 18px;
-      }
-    }
-  </style>
-</head>
-<body>
-  <div class="app">
-    <div class="header">
-      <div class="header-title">
-        🎬 AI Video Generator
-        <span class="header-pill">Free &amp; Fast</span>
-      </div>
-      <p class="header-sub">
-        Turn your <strong>text</strong> into <strong>video ideas &amp; scripts</strong>
-        in English, Arabic, or Somali – powered by AI.
-      </p>
-      <div class="badge-row">
-        <span class="badge">Max duration: 15 min</span>
-        <span class="badge">Multi-language (EN / AR / SO)</span>
-        <span class="badge">Optimized for mobile</span>
-      </div>
-    </div>
-
-    <div class="body">
-      <label class="field-label">
-        1. Video idea / script text <span>(required)</span>
-      </label>
-      <textarea
-        id="prompt"
-        class="textarea"
-        placeholder="Example: Explain the physiology of anxiety with simple animations and a calm voice-over for students..."
-      ></textarea>
-
-      <div class="row">
-        <div>
-          <label class="field-label">2. Language</label>
-          <select id="language">
-            <option value="en" selected>English</option>
-            <option value="ar">Arabic (العربية)</option>
-            <option value="so">Somali (Af-Soomaali)</option>
-          </select>
-        </div>
-        <div>
-          <label class="field-label">3. Max video length</label>
-          <select id="duration">
-            <option value="3">Up to 3 minutes</option>
-            <option value="5">Up to 5 minutes</option>
-            <option value="10">Up to 10 minutes</option>
-            <option value="15">Up to 15 minutes (max)</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="chips">
-        <div class="chip"><span>Tip</span> keep prompts short &amp; clear</div>
-        <div class="chip"><span>Idea</span> “short ad for my app”</div>
-        <div class="chip"><span>Idea</span> “educational explainer video”</div>
-      </div>
-
-      <button id="generateBtn" class="button-main" onclick="generateVideo()">
-        ⚡ Generate AI Video Plan
-      </button>
-
-      <div class="hint-row">
-        <span>AI only – you can use the script in any video tool</span>
-        <span>Backend: <strong>OpenAI API</strong></span>
-      </div>
-
-      <div class="status-card">
-        <div class="status-title">
-          <span>Status</span>
-          <span id="statusBadge" class="status-pill">Idle</span>
-        </div>
-        <div id="statusText" class="status-text">
-          Ready. Add your idea and press <strong>Generate</strong>.
-        </div>
-      </div>
-
-      <div class="footer">
-        <div style="display: flex; align-items: center;">
-          <span class="dot"></span>
-          <span>Connected to AI backend</span>
-        </div>
-        <div class="endpoint">
-          POST https://video-ai-backend-figu.onrender.com/generate
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const BACKEND_URL = "https://video-ai-backend-figu.onrender.com";
-
-    const promptInput = document.getElementById("prompt");
-    const languageSelect = document.getElementById("language");
-    const durationSelect = document.getElementById("duration");
-    const generateBtn = document.getElementById("generateBtn");
-    const statusBadge = document.getElementById("statusBadge");
-    const statusText = document.getElementById("statusText");
-
-    function setStatus(badge, text) {
-      statusBadge.textContent = badge;
-      statusText.innerHTML = text;
-    }
-
-    async function generateVideo() {
-      const prompt = promptInput.value.trim();
-      const language = languageSelect.value;
-      const duration = durationSelect.value;
-
-      if (!prompt) {
-        setStatus("Error", "Please write a video idea or script text first.");
-        promptInput.focus();
+      if (!data.success) {
+        alert("Error: " + data.message);
         return;
       }
 
-      try:
-        generateBtn.disabled = true;
-        generateBtn.textContent = "Generating with AI…";
-        setStatus("Working", "Sending your request to the AI backend…");
+      const videoUrl = data.videoUrl;
+      document.getElementById("result").style.display = "block";
+      document.getElementById("previewVideo").src = videoUrl;
+      document.getElementById("downloadLink").href = videoUrl;
 
-        const response = await fetch(BACKEND_URL + "/generate", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            prompt,
-            language,
-            maxMinutes: Number(duration),
-          }),
-        });
-
-        if (!response.ok) {
-          const text = await response.text();
-          throw new Error("Server error: " + text);
-        }
-
-        const data = await response.json();
-
-        // شكل استجابة متوقعة من الـ backend:
-        // { script: "...", scenes: [...], tips: "..." }
-
-        const script =
-          data.script || "AI script generated. Please check details below.";
-        const tips =
-          data.tips || "You can copy this script into Pictory, Runway, etc.";
-        const scenes = Array.isArray(data.scenes) ? data.scenes : [];
-
-        let html = "<strong>Success!</strong><br>";
-        html += "AI created a video plan for your idea.<br><br>";
-        html += "<strong>Main script:</strong><br>";
-        html += script.replace(/\n/g, "<br>") + "<br><br>";
-
-        if (scenes.length) {
-          html += "<strong>Scenes:</strong><br>";
-          html += "<ul style='margin-left:16px;'>";
-          scenes.forEach((s) => {
-            html += "<li>" + String(s).replace(/\n/g, "<br>") + "</li>";
-          });
-          html += "</ul><br>";
-        }
-
-        html += "<strong>Tips:</strong> " + tips;
-
-        setStatus("Done", html);
-      } catch (err) {
-        console.error(err);
-        setStatus(
-          "Error",
-          "Something went wrong: <br>" +
-            (err.message || "Unknown error") +
-            "<br><br>Check that the backend URL is correct and online."
-        );
-      } finally {
-        generateBtn.disabled = false;
-        generateBtn.textContent = "⚡ Generate AI Video Plan";
-      }
+    } catch (err) {
+      alert("Server error: " + err.message);
     }
-  </script>
-</body>
-</html>
+
+    document.getElementById("generateBtn").disabled = false;
+    document.getElementById("generateBtn").innerText = "Generate Video";
+  }
+</script>
